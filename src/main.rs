@@ -1,6 +1,8 @@
 use bevy::{prelude::*};
 
 mod tiles;
+mod gui;
+mod control;
 
 const BACKGROUND_COLOR  : Color = Color::rgb(026. / 255., 009. / 255., 013. / 255.);
 //const FILL_COLOR        : Color = Color::rgb(187. / 255., 068. / 255., 048. / 255.);
@@ -11,6 +13,8 @@ fn main() {
 
     app = add_base_to_bevy_app(app);
     app = tiles::add_conway_tiles_to_app(app);
+    app = gui::add_gui_to_app(app);
+    app = control::add_control_to_app(app);
 
     app.add_startup_system(spawn_camera);
     

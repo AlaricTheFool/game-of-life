@@ -2,6 +2,8 @@ use bevy::{prelude::*, render::render_resource::TextureUsages};
 use bevy_ecs_tilemap::prelude::*;
 use rand::prelude::*;
 
+use crate::control::SimControls;
+
 struct UpdateTimer(Timer);
 
 const MAP_WIDTH  : u32 = 32;
@@ -34,9 +36,20 @@ pub fn add_conway_tiles_to_app(mut app: App) -> App {
         .add_startup_system(randomize_tiles)
         .add_system(set_texture_filters_to_nearest)
         .add_system(simulate_tiles)
-        .add_system_to_stage(CoreStage::PostUpdate, change_tiles_to_new_states);
+        .add_system_to_stage(CoreStage::PostUpdate, change_tiles_to_new_states)
+        .add_system_to_stage(CoreStage::PreUpdate, read_tile_controls);
     
     app
+}
+
+fn read_tile_controls(mut controls: ResMut<SimControls>, tiles: Query<(&mut Tile, &mut LifeTile)>) {
+    if controls.should_restart {
+        randomize_tiles(tiles);
+        controls.should_restart = false;
+    } else if controls.should_clear {
+        clear_tiles(tiles);
+        controls.should_clear = false;
+    }
 }
 
 fn build_map(mut commands: Commands, asset_server: Res<AssetServer>, mut map_query: MapQuery) {
@@ -97,6 +110,15 @@ fn randomize_tiles(mut tiles: Query<(&mut Tile, &mut LifeTile)>) {
     }
 }
 
+fn clear_tiles(mut tiles: Query<(&mut Tile, &mut LifeTile)>) {
+    for (mut tile, mut life) in tiles.iter_mut() {
+        let is_alive = false;
+        tile.texture_index = if is_alive { 1 } else { 0 };
+        life.is_alive = is_alive;
+        life.will_be_alive = is_alive;
+    }
+}
+
 pub fn set_texture_filters_to_nearest(
     mut texture_events: EventReader<AssetEvent<Image>>,
     mut textures: ResMut<Assets<Image>>,
@@ -117,7 +139,11 @@ pub fn set_texture_filters_to_nearest(
 }
 
 
-fn simulate_tiles(time: Res<Time>, mut timer: ResMut<UpdateTimer>, tile_query: Query<(Entity, &TilePos)>, mut life_query: Query<&mut LifeTile>, mut map_query: MapQuery) {
+fn simulate_tiles(controls: Res<SimControls>, time: Res<Time>, mut timer: ResMut<UpdateTimer>, tile_query: Query<(Entity, &TilePos)>, mut life_query: Query<&mut LifeTile>, mut map_query: MapQuery) {
+    if controls.is_paused {
+        return;
+    }
+
     if timer.0.tick(time.delta()).just_finished() {
         for (entity, pos) in tile_query.iter() {
             let alive_neighbors = map_query

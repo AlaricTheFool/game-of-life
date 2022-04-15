@@ -1,5 +1,10 @@
-[ ] Make UI Panel
-[ ] Add "Restart Button"
-[ ] Add "Clear Button"
-[ ] Add Pause/Play Button
+[X] Make UI Panel
+[X] Add "Restart Button"
+[X] Add "Clear Button"
+[X] Add Pause/Play Button
 [ ] Data Readouts > Performance and Sim Stats
+
+[ ] Turn tiles on/off with a click
+[ ] Visual Polish
+[ ] Camera Controls
+[ ] Adjustable Map Sizes
